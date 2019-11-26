@@ -132,12 +132,40 @@ func (g *Generator) processSchema(schemaName string, schema *Schema) (typ string
 				}
 			}
 		}
-	} else {
-		if schema.Reference != "" {
-			return g.processReference(schema)
-		}
+	} else if schema.Reference != "" {
+		return g.processReference(schema)
+	} else if len(schema.OneOf) != 0 {
+		return g.processOneOf(schemaName, schema)
 	}
 	return // return interface{}
+}
+
+func (g *Generator) processOneOf(schemaName string, schema *Schema) (typ string, err error) {
+	if len(schema.OneOf) != 2 {
+		return "interface{}", nil
+	}
+	type1, err := g.processSchema(schemaName, schema.OneOf[0])
+	if err != nil {
+		return "", err
+	}
+	if type1 == "interface{}" {
+		return type1, nil
+	}
+	type2, err := g.processSchema(schemaName, schema.OneOf[1])
+	if err != nil {
+		return "", err
+	}
+	if type2 == "interface{}" {
+		return type2, nil
+	}
+
+	if type1 == "nil" {
+		return "*" + type2, nil
+	} else if type2 == "nil" {
+		return "*" + type1, nil
+	} else {
+		return "interface{}", nil
+	}
 }
 
 // name: name of this array, usually the js key
