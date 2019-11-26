@@ -134,13 +134,15 @@ func (strct *%s) MarshalJSON() ([]byte, error) {
     if comma { 
         buf.WriteString(",") 
     }
-    buf.WriteString("\"%[1]s\": ")
 	if tmp, err := json.Marshal(strct.%[2]s); err != nil {
 		return nil, err
  	} else {
- 		buf.Write(tmp)
+		if len(tmp) != 0 {
+			buf.WriteString("\"%[1]s\": ")
+			buf.Write(tmp)
+			comma = true
+		}
 	}
-	comma = true
 `, f.JSONName, f.Name)
 		}
 	}
