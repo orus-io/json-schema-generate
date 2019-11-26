@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/a-h/generate"
+	"github.com/orus-io/json-schema-generate"
 )
 
 var (

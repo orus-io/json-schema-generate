@@ -1,0 +1,4 @@
+github.com/a-h/generate v0.0.0-20190312091541-e59c34d33fb3 h1:Ddgcglj3p+q6QqZ5n48lh7ZysGiKjUgdGOskKSik0xY=
+github.com/a-h/generate v0.0.0-20190312091541-e59c34d33fb3/go.mod h1:traiLYQ0YD7qUMCdjo6/jSaJRPHXniX4HVs+PhEhYpc=
+github.com/orus-io/generate v0.0.0-20190312091541-e59c34d33fb3 h1:n5uwQcMxVaHsuDOrTwD+Uu6vW15sQ1u5J/vznc8RJaU=
+github.com/orus-io/generate v0.0.0-20190312091541-e59c34d33fb3/go.mod h1:eVC9pviNOYZeYLSQwZeX+N8Tqdg3Ai16uEsCKZwfQRQ=

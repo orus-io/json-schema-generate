@@ -3,7 +3,7 @@ package test
 import (
 	"encoding/json"
 	"testing"
-	"github.com/a-h/generate/test/example1_gen"
+	"github.com/orus-io/json-schema-generate/test/example1_gen"
 )
 
 func TestExample1(t *testing.T) {
