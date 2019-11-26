@@ -140,6 +140,17 @@ func (g *Generator) processSchema(schemaName string, schema *Schema) (typ string
 	return // return interface{}
 }
 
+func getOneOfTypeNull(typ string) string {
+	switch typ {
+	case "string":
+		return "OneOfStringNull"
+	case "float64":
+		return "OneOfNumberNull"
+	default:
+		return "interface{}"
+	}
+}
+
 func (g *Generator) processOneOf(schemaName string, schema *Schema) (typ string, err error) {
 	if len(schema.OneOf) != 2 {
 		return "interface{}", nil
@@ -160,9 +171,9 @@ func (g *Generator) processOneOf(schemaName string, schema *Schema) (typ string,
 	}
 
 	if type1 == "nil" {
-		return "*" + type2, nil
+		return getOneOfTypeNull(type2), nil
 	} else if type2 == "nil" {
-		return "*" + type1, nil
+		return getOneOfTypeNull(type1), nil
 	} else {
 		return "interface{}", nil
 	}
