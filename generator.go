@@ -146,6 +146,8 @@ func getOneOfTypeNull(typ string) string {
 		return "OneOfStringNull"
 	case "float64":
 		return "OneOfNumberNull"
+	case "bool":
+		return "OneOfBoolNull"
 	default:
 		return "interface{}"
 	}
