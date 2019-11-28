@@ -30,6 +30,15 @@ func getOrderedStructNames(m map[string]Struct) []string {
 	return keys
 }
 
+func sortedImports(m map[string]bool) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // Output generates code and writes to w.
 func Output(w io.Writer, g *Generator, pkg string) {
 	structs := g.Structs
@@ -54,7 +63,7 @@ func Output(w io.Writer, g *Generator, pkg string) {
 
 	if len(imports) > 0 {
 		fmt.Fprintf(w, "\nimport (\n")
-		for k := range imports {
+		for _, k := range sortedImports(imports) {
 			fmt.Fprintf(w, "    \"%s\"\n", k)
 		}
 		fmt.Fprintf(w, ")\n")
