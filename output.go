@@ -138,21 +138,29 @@ func (strct *%s) MarshalJSON() ([]byte, error) {
 				}
 			}
 
-			fmt.Fprintf(w,
-				`    // Marshal the "%[1]s" field
+			marshalTmpl := `    // Marshal the "%[1]s" field
     if comma { 
         buf.WriteString(",") 
     }
-	if tmp, err := json.Marshal(strct.%[2]s); err != nil {
+	`
+
+			if !f.Required {
+				marshalTmpl += `if !IsEmpty(strct.%[2]s) {`
+			}
+
+			marshalTmpl += `if tmp, err := json.Marshal(strct.%[2]s); err != nil {
 		return nil, err
  	} else {
-		if len(tmp) != 0 {
 			buf.WriteString("\"%[1]s\": ")
 			buf.Write(tmp)
 			comma = true
-		}
-	}
-`, f.JSONName, f.Name)
+	} `
+			if !f.Required {
+				marshalTmpl += `} else {
+		comma = false }`
+			}
+			fmt.Fprintf(w, marshalTmpl, f.JSONName, f.Name)
+			fmt.Fprintf(w, "\n")
 		}
 	}
 	if s.AdditionalType != "" {
