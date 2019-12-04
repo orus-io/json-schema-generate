@@ -2,3 +2,5 @@ github.com/a-h/generate v0.0.0-20190312091541-e59c34d33fb3 h1:Ddgcglj3p+q6QqZ5n4
 github.com/a-h/generate v0.0.0-20190312091541-e59c34d33fb3/go.mod h1:traiLYQ0YD7qUMCdjo6/jSaJRPHXniX4HVs+PhEhYpc=
 github.com/orus-io/generate v0.0.0-20190312091541-e59c34d33fb3 h1:n5uwQcMxVaHsuDOrTwD+Uu6vW15sQ1u5J/vznc8RJaU=
 github.com/orus-io/generate v0.0.0-20190312091541-e59c34d33fb3/go.mod h1:eVC9pviNOYZeYLSQwZeX+N8Tqdg3Ai16uEsCKZwfQRQ=
+github.com/shopspring/decimal v0.0.0-20191130220710-360f2bc03045 h1:8CnFGhoe92Izugjok8nZEGYCNovJwdRFYwrEiLtG6ZQ=
+github.com/shopspring/decimal v0.0.0-20191130220710-360f2bc03045/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=

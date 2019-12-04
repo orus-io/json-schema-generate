@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
+
+	"github.com/shopspring/decimal"
 )
 
 // Generator will produce structs from the JSON schema.
@@ -121,6 +123,18 @@ func (g *Generator) processSchema(schemaName string, schema *Schema) (typ string
 				}
 				if !isMultiType {
 					return rv, nil
+				}
+			case "number":
+				if !schema.MultipleOf.IsZero() {
+					exp := schema.MultipleOf.Exponent()
+					if exp < 0 && schema.MultipleOf.Equal(decimal.New(1, exp)) {
+						if !isMultiType {
+							return "decimal.Decimal", nil
+						}
+					}
+				}
+				if !isMultiType {
+					return "float64", nil
 				}
 			default:
 				rv, err := getPrimitiveTypeName(schemaType, "", false)

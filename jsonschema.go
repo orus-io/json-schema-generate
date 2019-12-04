@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+
+	"github.com/shopspring/decimal"
 )
 
 // AdditionalProperties handles additional properties present in the JSON schema.
@@ -27,6 +29,9 @@ type Schema struct {
 	// TypeValue is the schema instance type.
 	// http://json-schema.org/draft-07/json-schema-validation.html#rfc.section.6.1.1
 	TypeValue interface{} `json:"type"`
+
+	// MultipleOf is the schema 'multipleOf' attribute
+	MultipleOf decimal.Decimal
 
 	// Definitions are inline re-usable schemas.
 	// http://json-schema.org/draft-07/json-schema-validation.html#rfc.section.9
