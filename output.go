@@ -235,7 +235,12 @@ func (strct *%s) UnmarshalJSON(b []byte) error {
 		}
 		fmt.Fprintf(w, `        case "%s":
             if err := json.Unmarshal([]byte(v), &strct.%s); err != nil {
-                return err
+				var b bool
+				if err := json.Unmarshal([]byte(v), &b); err != nil || b {
+					return err
+				}
+				// we receive a 'false', which is a known issue of the sender
+				// just ignore it
              }
 `, f.JSONName, f.Name)
 		if f.Required {
