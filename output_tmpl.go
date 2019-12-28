@@ -420,7 +420,7 @@ func (s *{{ .Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 		{{- range .Fields }}
 		{{- if ne .JSONName "-" }}
 		case "{{ .JSONName }}":
-			{{- if ne .Type "bool" }}
+			{{- if and (ne .Type "bool") (ne .Type "OneOfBoolNull")}}
 			if iter.WhatIsNext() == jsoniter.BoolValue {
 				if iter.ReadBool() {
 					iter.ReportError("reading field {{ .JSONName }}", "{{ .JSONName }} is 'true', but the expected type is {{ .Type }}")
@@ -461,6 +461,7 @@ func (s *{{ .Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
             s.AdditionalProperties[field]= additionalValue
 			{{- else }}
 			// Ignore the additional property
+			iter.Skip()
 			{{- end }}
 		}
 	}
