@@ -420,14 +420,13 @@ func (s *{{ .Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 		{{- range .Fields }}
 		{{- if ne .JSONName "-" }}
 		case "{{ .JSONName }}":
-			{{- if and (ne .Type "bool") (ne .Type "OneOfBoolNull")}}
+			{{- if and $top.AlwaysAcceptFalse (ne .Type "bool") (ne .Type "OneOfBoolNull")}}
 			if iter.WhatIsNext() == jsoniter.BoolValue {
 				if iter.ReadBool() {
 					iter.ReportError("reading field {{ .JSONName }}", "{{ .JSONName }} is 'true', but the expected type is {{ .Type }}")
 					return
 				}
 				// received 'false', which we accept and ignore for now
-				// TODO make this a non-default option
 			}
 			{{- end}}
 			{{- if eq .Type "string" }}

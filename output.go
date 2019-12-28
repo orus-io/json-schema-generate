@@ -37,6 +37,8 @@ type OutputData struct {
 	Structs     []Struct
 	Aliases     []Field
 	Backquote   string
+
+	AlwaysAcceptFalse bool
 }
 
 // Pkg ...
@@ -75,15 +77,16 @@ func (f Field) IsPointer() bool {
 }
 
 // Output generates code and writes to w.
-func Output(w io.Writer, g *Generator, pkg string) {
+func Output(w io.Writer, g *Generator, pkg string, alwaysAcceptFalse bool) {
 	structs := g.Structs
 	aliases := g.Aliases
 
 	data := OutputData{
 		ImportPaths: make(map[string]string),
 
-		PackageName: cleanPackageName(pkg),
-		Backquote:   "`",
+		PackageName:       cleanPackageName(pkg),
+		Backquote:         "`",
+		AlwaysAcceptFalse: alwaysAcceptFalse,
 	}
 
 	for _, k := range getOrderedStructNames(structs) {
