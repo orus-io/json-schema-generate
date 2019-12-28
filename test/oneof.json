@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "OneOfTest",
+  "type": "object",
+  "properties": {
+    "plaindata": {
+      "oneOf": [
+          {"type": "string"},
+          {"type": "null"}
+      ]
+    },
+    "complexdata": {
+      "oneOf": [
+          {
+              "type": "object",
+              "title": "Not So Anonymous",
+              "properties": {
+                  "age": {
+                      "type": "integer"
+                  }
+              }
+          },
+          {"type": "string"},
+          {"type": "integer"},
+          {"type": "number"},
+          {"type": "boolean"},
+          {"type": "null"}
+      ]
+    }
+  }
+}

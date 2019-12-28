@@ -36,6 +36,7 @@ type OutputData struct {
 	PackageName string
 	Structs     []Struct
 	Aliases     []Field
+	OneOfs      map[string]OneOf
 	Backquote   string
 
 	AlwaysAcceptFalse bool
@@ -60,12 +61,6 @@ func (d *OutputData) Pkg(name string, path ...string) string {
 	return name
 }
 
-// Comment outputs a string the '// ' in front of each line
-func (OutputData) Comment(s ...string) string {
-	lines := strings.Split(strings.Join(s, " "), "\n")
-	return strings.Join(lines, "\n// ")
-}
-
 // NoProp returns true if the struct has no property
 func (s Struct) NoProp() bool {
 	return len(s.Fields) == 0 && (s.AdditionalType == "" || s.AdditionalType == "false")
@@ -85,6 +80,7 @@ func Output(w io.Writer, g *Generator, pkg string, alwaysAcceptFalse bool) {
 		ImportPaths: make(map[string]string),
 
 		PackageName:       cleanPackageName(pkg),
+		OneOfs:            g.OneOfs,
 		Backquote:         "`",
 		AlwaysAcceptFalse: alwaysAcceptFalse,
 	}

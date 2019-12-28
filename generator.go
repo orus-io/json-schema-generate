@@ -16,6 +16,7 @@ type Generator struct {
 	resolver *RefResolver
 	Structs  map[string]Struct
 	Aliases  map[string]Field
+	OneOfs   map[string]OneOf
 	// cache for reference types; k=url v=type
 	refs      map[string]string
 	anonCount int
@@ -28,6 +29,7 @@ func New(schemas ...*Schema) *Generator {
 		resolver: NewRefResolver(schemas),
 		Structs:  make(map[string]Struct),
 		Aliases:  make(map[string]Field),
+		OneOfs:   make(map[string]OneOf),
 		refs:     make(map[string]string),
 	}
 }
@@ -170,32 +172,60 @@ func getOneOfTypeNull(typ string) string {
 	}
 }
 
-func (g *Generator) processOneOf(schemaName string, schema *Schema) (typ string, err error) {
-	if len(schema.OneOf) != 2 {
-		return "interface{}", nil
-	}
-	type1, err := g.processSchema(schemaName, schema.OneOf[0])
-	if err != nil {
-		return "", err
-	}
-	if type1 == "interface{}" {
-		return type1, nil
-	}
-	type2, err := g.processSchema(schemaName, schema.OneOf[1])
-	if err != nil {
-		return "", err
-	}
-	if type2 == "interface{}" {
-		return type2, nil
+func (g *Generator) generateOneOf(schemaName string, schema *Schema) (string, error) {
+	var oneOf = OneOf{
+		Name:        g.getSchemaName(schemaName, schema) + "Type",
+		Description: schema.Description,
 	}
 
-	if type1 == "nil" {
-		return getOneOfTypeNull(type2), nil
-	} else if type2 == "nil" {
-		return getOneOfTypeNull(type1), nil
-	} else {
-		return "interface{}", nil
+	for _, subSchema := range schema.OneOf {
+		typ, err := g.processSchema(schemaName+getGolangName(subSchema.Title), subSchema)
+		if err != nil {
+			return "", err
+		}
+		jsonType, _ := subSchema.Type()
+		shortType := typ
+		if subSchema.Title != "" {
+			shortType = getGolangName(subSchema.Title)
+		}
+		if strings.HasPrefix(shortType, "*") {
+			shortType = shortType[1:]
+		}
+		shortType = strings.ToUpper(shortType[:1]) + shortType[1:]
+		oneOf.Types = append(oneOf.Types, OneOfType{
+			ShortType: shortType,
+			Type:      typ,
+			JSONType:  jsonType,
+		})
 	}
+	g.OneOfs[oneOf.Name] = oneOf
+	return oneOf.Name, nil
+}
+
+func (g *Generator) processOneOf(schemaName string, schema *Schema) (typ string, err error) {
+	if len(schema.OneOf) == 2 {
+		type1, err := g.processSchema(schemaName, schema.OneOf[0])
+		if err != nil {
+			return "", err
+		}
+		if type1 == "interface{}" {
+			return type1, nil
+		}
+		type2, err := g.processSchema(schemaName, schema.OneOf[1])
+		if err != nil {
+			return "", err
+		}
+		if type2 == "interface{}" {
+			return type2, nil
+		}
+
+		if type1 == "nil" {
+			return getOneOfTypeNull(type2), nil
+		} else if type2 == "nil" {
+			return getOneOfTypeNull(type1), nil
+		}
+	}
+	return g.generateOneOf(schemaName, schema)
 }
 
 // name: name of this array, usually the js key
@@ -454,4 +484,28 @@ type Field struct {
 	// Required is set to true when the field is required.
 	Required    bool
 	Description string
+}
+
+// OneOfType is a type in a OneOf
+type OneOfType struct {
+	ShortType string
+	Type      string
+	JSONType  string
+}
+
+// OneOf is a generated type for holding a oneOf field data
+type OneOf struct {
+	Name        string
+	Description string
+	Types       []OneOfType
+}
+
+// GetByJSONType returns the type matching the given json type
+func (o OneOf) GetByJSONType(t string) OneOfType {
+	for _, ot := range o.Types {
+		if ot.JSONType == t {
+			return ot
+		}
+	}
+	return OneOfType{}
 }
