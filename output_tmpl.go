@@ -18,6 +18,25 @@ import (
 var mainTmpl = template.Must(template.New("schema-generate").Parse(
 	`{{- with $top := . -}}
 
+func ValueTypeToString(valueType jsoniter.ValueType) string {
+	switch valueType {
+	case jsoniter.StringValue:
+		return "string"
+	case jsoniter.NumberValue:
+		return "number"
+	case jsoniter.NilValue:
+		return "nil"
+	case jsoniter.BoolValue:
+		return "bool"
+	case jsoniter.ArrayValue:
+		return "array"
+	case jsoniter.ObjectValue:
+		return "object"
+	default:
+		return "invalid"
+	}
+}
+
 type commaTracker struct {
 	stream *jsoniter.Stream
 	started bool
@@ -45,81 +64,49 @@ func IsEmpty(v interface{}) bool {
 	return !rv.IsValid() || rv.IsZero()
 }
 
-// DataType is a json data type
-type DataType = int
-
-const (
-	// EmptyType is for empty values
-	EmptyType DataType = iota
-	// NullType is for 'null' values
-	NullType
-	// StringType is for 'string' values
-	StringType
-	// NumberType is for 'number' values
-	NumberType
-	// BoolType is for 'bool' values
-	BoolType
-)
-
-// DataTypeToString ...
-func DataTypeToString(t DataType) string {
-	switch t {
-	case EmptyType:
-		return "EmptyType"
-	case NullType:
-		return "NullType"
-	case StringType:
-		return "StringType"
-	case NumberType:
-		return "NumberType"
-	default:
-		return {{.Pkg "fmt"}}.Sprintf("%d.(DataType)", int(t))
-	}
-}
-
 var (
 	jsonNullValue = []byte("null")
 )
 
 // OneOfStringNull is a 'string' or a 'null', and can be emptied
 type OneOfStringNull struct {
-	currentType DataType
+	currentType jsoniter.ValueType
 	stringValue string
 }
 
 // NewOneOfStringNull creates a empty OneOfStringNull
 func NewOneOfStringNull() OneOfStringNull {
-	return OneOfStringNull{EmptyType, ""}
+	return OneOfStringNull{jsoniter.InvalidValue, ""}
 }
 
 // NewOneOfStringNullString creates a OneOfStringNull of type string
 func NewOneOfStringNullString(value string) OneOfStringNull {
-	return OneOfStringNull{StringType, value}
+	return OneOfStringNull{jsoniter.StringValue, value}
 }
 
 // NewOneOfStringNullNull creates a OneOfStringNull of type null
 func NewOneOfStringNullNull() OneOfStringNull {
-	return OneOfStringNull{NullType, ""}
+	return OneOfStringNull{jsoniter.NilValue, ""}
 }
 
 // IsEmpty returns true if the value is empty
 func (value *OneOfStringNull) IsEmpty() bool {
-	return value.currentType == EmptyType
+	return value.currentType == jsoniter.InvalidValue
 }
 
 // IsNull returns true if the value is 'null'
 func (value *OneOfStringNull) IsNull() bool {
-	return value.currentType == NullType
+	return value.currentType == jsoniter.NilValue
 }
 
 // IsString returns true if the value is a string
 func (value *OneOfStringNull) IsString() bool {
-	return value.currentType == StringType
+	return value.currentType == jsoniter.StringValue
 }
 
 // StringValue returns the current value if IsString() is true, "" otherwise
 func (value *OneOfStringNull) StringValue() string {
-	if value.currentType == StringType {
+	if value.currentType == jsoniter.StringValue {
 		return value.stringValue
 	}
 	return ""
@@ -128,14 +115,14 @@ func (value *OneOfStringNull) StringValue() string {
 // NullString returns the current value as a sql.NullString
 func (value *OneOfStringNull) NullString() {{ .Pkg "database/sql" }}.NullString {
 	return sql.NullString{
-		Valid:  value.currentType == StringType,
+		Valid:  value.currentType == jsoniter.StringValue,
 		String: value.stringValue,
 	}
 }
 
 // MarshalJSONStream serializes to a jsoniter Stream
 func (value OneOfStringNull) MarshalJSONStream(stream *{{ .Pkg "jsoniter" "github.com/json-iterator/go" }}.Stream) {
-	if value.currentType == StringType {
+	if value.currentType == jsoniter.StringValue {
 		stream.WriteString(value.stringValue)
 	} else {
 		stream.WriteNil()
@@ -145,70 +132,70 @@ func (value OneOfStringNull) MarshalJSONStream(stream *{{ .Pkg "jsoniter" "githu
 // MarshalJSON serialize to json
 func (value OneOfStringNull) MarshalJSON() ([]byte, error) {
 	switch value.currentType {
-	case EmptyType:
+	case jsoniter.InvalidValue:
 		return jsonNullValue, nil
-	case NullType:
+	case jsoniter.NilValue:
 		return jsonNullValue, nil
-	case StringType:
+	case jsoniter.StringValue:
 		return jsoniter.Marshal(value.stringValue)
 	}
-	return nil, fmt.Errorf(
+	return nil, {{ $top.Pkg "fmt" }}.Errorf(
 		"OneOfStringNull unsupported type: %s",
-		DataTypeToString(value.currentType))
+		ValueTypeToString(value.currentType))
 }
 
 // UnmarshalJSON unserialize a OneOfStringNull from json
 func (value *OneOfStringNull) UnmarshalJSON(data []byte) error {
 	if {{ .Pkg "bytes" }}.Equal(data, jsonNullValue) {
-		value.currentType = NullType
+		value.currentType = jsoniter.NilValue
 	} else {
 		if err := jsoniter.Unmarshal(data, &value.stringValue); err != nil {
 			return err
 		}
-		value.currentType = StringType
+		value.currentType = jsoniter.StringValue
 	}
 	return nil
 }
 
 // OneOfNumberNull is a 'string' or a 'null', and can be emptied
 type OneOfNumberNull struct {
-	currentType DataType
+	currentType jsoniter.ValueType
 	numberValue float64
 }
 
 // NewOneOfNumberNull creates a empty OneOfNumberNull
 func NewOneOfNumberNull() OneOfNumberNull {
-	return OneOfNumberNull{EmptyType, 0}
+	return OneOfNumberNull{jsoniter.InvalidValue, 0}
 }
 
 // NewOneOfNumberNullNumber creates a OneOfNumberNull of type number
 func NewOneOfNumberNullNumber(value float64) OneOfNumberNull {
-	return OneOfNumberNull{NumberType, value}
+	return OneOfNumberNull{jsoniter.NumberValue, value}
 }
 
 // NewOneOfNumberNullNull creates a OneOfNumberNull of type null
 func NewOneOfNumberNullNull() OneOfNumberNull {
-	return OneOfNumberNull{NullType, 0}
+	return OneOfNumberNull{jsoniter.NilValue, 0}
 }
 
 // IsEmpty returns true if the value is empty
 func (value *OneOfNumberNull) IsEmpty() bool {
-	return value.currentType == EmptyType
+	return value.currentType == jsoniter.InvalidValue
 }
 
 // IsNull returns true if the value is 'null'
 func (value *OneOfNumberNull) IsNull() bool {
-	return value.currentType == NullType
+	return value.currentType == jsoniter.NilValue
 }
 
 // IsNumber returns true if the value is a number
 func (value *OneOfNumberNull) IsNumber() bool {
-	return value.currentType == NumberType
+	return value.currentType == jsoniter.NumberValue
 }
 
 // NumberValue returns the current value if IsNumber() is true, 0 otherwise
 func (value *OneOfNumberNull) NumberValue() float64 {
-	if value.currentType == NumberType {
+	if value.currentType == jsoniter.NumberValue {
 		return value.numberValue
 	}
 	return 0
@@ -217,70 +204,70 @@ func (value *OneOfNumberNull) NumberValue() float64 {
 // MarshalJSON serialize to json
 func (value OneOfNumberNull) MarshalJSON() ([]byte, error) {
 	switch value.currentType {
-	case EmptyType:
+	case jsoniter.InvalidValue:
 		return jsonNullValue, nil
-	case NullType:
+	case jsoniter.NilValue:
 		return jsonNullValue, nil
-	case NumberType:
+	case jsoniter.NumberValue:
 		return jsoniter.Marshal(value.numberValue)
 	}
 	return nil, fmt.Errorf(
 		"OneOfNumberNull unsupported type: %s",
-		DataTypeToString(value.currentType))
+		ValueTypeToString(value.currentType))
 }
 
 // UnmarshalJSON unserialize a OneOfNumberNull from json
 func (value *OneOfNumberNull) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, jsonNullValue) {
-		value.currentType = NullType
+		value.currentType = jsoniter.NilValue
 	} else {
 		if err := jsoniter.Unmarshal(data, &value.numberValue); err != nil {
 			return err
 		}
-		value.currentType = NumberType
+		value.currentType = jsoniter.NumberValue
 	}
 	return nil
 }
 
 // OneOfBoolNull is a 'bool' or a 'null', and can be emptied
 type OneOfBoolNull struct {
-	currentType DataType
+	currentType jsoniter.ValueType
 	boolValue   bool
 }
 
 // NewOneOfBoolNull creates a empty OneOfBoolNull
 func NewOneOfBoolNull() OneOfBoolNull {
-	return OneOfBoolNull{EmptyType, false}
+	return OneOfBoolNull{jsoniter.InvalidValue, false}
 }
 
 // NewOneOfBoolNullBool creates a OneOfBoolNull of type number
 func NewOneOfBoolNullBool(value bool) OneOfBoolNull {
-	return OneOfBoolNull{BoolType, value}
+	return OneOfBoolNull{jsoniter.BoolValue, value}
 }
 
 // NewOneOfBoolNullNull creates a OneOfBoolNull of type null
 func NewOneOfBoolNullNull() OneOfBoolNull {
-	return OneOfBoolNull{NullType, false}
+	return OneOfBoolNull{jsoniter.NilValue, false}
 }
 
 // IsEmpty returns true if the value is empty
 func (value *OneOfBoolNull) IsEmpty() bool {
-	return value.currentType == EmptyType
+	return value.currentType == jsoniter.InvalidValue
 }
 
 // IsNull returns true if the value is 'null'
 func (value *OneOfBoolNull) IsNull() bool {
-	return value.currentType == NullType
+	return value.currentType == jsoniter.NilValue
 }
 
 // IsBool returns true if the value is a bool
 func (value *OneOfBoolNull) IsBool() bool {
-	return value.currentType == BoolType
+	return value.currentType == jsoniter.BoolValue
 }
 
 // BoolValue returns the current value if IsBool() is true, false otherwise
 func (value *OneOfBoolNull) BoolValue() bool {
-	if value.currentType == BoolType {
+	if value.currentType == jsoniter.BoolValue {
 		return value.boolValue
 	}
 	return false
@@ -289,27 +276,27 @@ func (value *OneOfBoolNull) BoolValue() bool {
 // MarshalJSON serialize to json
 func (value OneOfBoolNull) MarshalJSON() ([]byte, error) {
 	switch value.currentType {
-	case EmptyType:
+	case jsoniter.InvalidValue:
 		return jsonNullValue, nil
-	case NullType:
+	case jsoniter.NilValue:
 		return jsonNullValue, nil
-	case BoolType:
+	case jsoniter.BoolValue:
 		return jsoniter.Marshal(value.boolValue)
 	}
 	return nil, fmt.Errorf(
 		"OneOfBoolNull unsupported type: %s",
-		DataTypeToString(value.currentType))
+		ValueTypeToString(value.currentType))
 }
 
 // UnmarshalJSON unserialize a OneOfBoolNull from json
 func (value *OneOfBoolNull) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, jsonNullValue) {
-		value.currentType = NullType
+		value.currentType = jsoniter.NilValue
 	} else {
 		if err := jsoniter.Unmarshal(data, &value.boolValue); err != nil {
 			return err
 		}
-		value.currentType = BoolType
+		value.currentType = jsoniter.BoolValue
 	}
 	return nil
 }
