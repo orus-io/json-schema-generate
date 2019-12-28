@@ -163,7 +163,10 @@ func getOneOfTypeNull(typ string) string {
 	case "bool":
 		return "OneOfBoolNull"
 	default:
-		return "interface{}"
+		if !strings.HasPrefix(typ, "*") {
+			typ = "*" + typ
+		}
+		return typ
 	}
 }
 
