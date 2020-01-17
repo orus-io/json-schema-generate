@@ -72,7 +72,7 @@ func (f Field) IsPointer() bool {
 }
 
 // Output generates code and writes to w.
-func Output(w io.Writer, g *Generator, pkg string, alwaysAcceptFalse bool) {
+func Output(w io.Writer, g *Generator, pkg string, alwaysAcceptFalse bool, useEmptyTypes bool) {
 	structs := g.Structs
 	aliases := g.Aliases
 
@@ -86,8 +86,23 @@ func Output(w io.Writer, g *Generator, pkg string, alwaysAcceptFalse bool) {
 	}
 
 	for _, k := range getOrderedStructNames(structs) {
-		data.Structs = append(data.Structs, structs[k])
+		s := structs[k]
+		if useEmptyTypes {
+			for n, f := range s.Fields {
+				if !f.Required {
+					switch f.Type {
+					case "string":
+						f.Type = "EmptyString"
+					default:
+						continue
+					}
+					s.Fields[n] = f
+				}
+			}
+		}
+		data.Structs = append(data.Structs, s)
 	}
+
 	for _, k := range getOrderedFieldNames(aliases) {
 		data.Aliases = append(data.Aliases, aliases[k])
 	}

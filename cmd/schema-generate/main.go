@@ -16,6 +16,7 @@ var (
 	p                     = flag.String("p", "main", "The package that the structs are created in.")
 	i                     = flag.String("i", "", "A single file path (used for backwards compatibility).")
 	alwaysAcceptFalseFlag = flag.Bool("alwaysAcceptFalse", false, "Any field will accept decoding 'false' and ignore it")
+	useEmptyTypes         = flag.Bool("useEmptyTypes", false, "Use types with a empty types if non-required")
 	schemaKeyRequiredFlag = flag.Bool("schemaKeyRequired", false, "Allow input files with no $schema key.")
 )
 
@@ -64,5 +65,5 @@ func main() {
 		}
 	}
 
-	generate.Output(w, g, *p, *alwaysAcceptFalseFlag)
+	generate.Output(w, g, *p, *alwaysAcceptFalseFlag, *useEmptyTypes)
 }

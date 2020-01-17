@@ -5,6 +5,24 @@ import (
 	"text/template"
 )
 
+var streamMarshallerTypes = []string{
+	"EmptyBool",
+	"EmptyNumber",
+	"EmptyString",
+	"OneOfBoolNull",
+	"OneOfNumberNull",
+	"OneOfStringNull",
+}
+
+var iteratorUnmashallerTypes = []string{
+	"EmptyBool",
+	"EmptyNumber",
+	"EmptyString",
+	"OneOfBoolNull",
+	"OneOfNumberNull",
+	"OneOfStringNull",
+}
+
 var funcs = template.FuncMap{
 	// comment outputs a string the '// ' in front of each line
 	"comment": func(s ...string) string {
@@ -57,6 +75,24 @@ var funcs = template.FuncMap{
 	// ispointer returns true if the given type starts with "*"
 	"ispointer": func(t string) bool {
 		return t[0] == '*'
+	},
+	// isStreamMarshaller returns true if the given type is known to have a MarshalJSONStream function
+	"isStreamMarshaller": func(t string) bool {
+		for _, s := range streamMarshallerTypes {
+			if s == t {
+				return true
+			}
+		}
+		return false
+	},
+	// isIteratorUnmarshaller returns true if the given type is known to have a UnmarshalJSONIterator function
+	"isIteratorUnmarshaller": func(t string) bool {
+		for _, s := range iteratorUnmashallerTypes {
+			if s == t {
+				return true
+			}
+		}
+		return false
 	},
 }
 
@@ -125,6 +161,59 @@ func IsEmpty(v interface{}) bool {
 var (
 	jsonNullValue = []byte("null")
 )
+
+// NewEmptyString creates a non-empty EmptyString
+func NewEmptyString(s string) EmptyString {
+	return EmptyString{s, true}
+}
+
+// EmptyString is string or nothing
+type EmptyString struct {
+	String string
+	Valid bool // Valid is true if String is not empty
+}
+
+func (s EmptyString) IsEmpty() bool {
+	return !s.Valid
+}
+
+func (s EmptyString) MarshalJSON() ([]byte, error) {
+	if s.Valid {
+		return jsoniter.Marshal(s.String)
+	}
+	return []byte("\"\""), nil
+}
+
+func (s *EmptyString) Set(value string) {
+	s.String = value
+	s.Valid = true
+}
+
+func (s *EmptyString) Unset() {
+	s.String = ""
+	s.Valid = false
+}
+
+func (s EmptyString) MarshalJSONStream(stream *jsoniter.Stream) {
+	if s.Valid {
+		stream.WriteString(s.String)
+	} else {
+		stream.WriteString("")
+	}
+}
+
+func (s *EmptyString) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
+	s.String = iter.ReadString()
+	s.Valid = iter.Error == nil
+}
+
+func (s *EmptyString) UnmarshalJSON(data []byte) error {
+	if err := jsoniter.Unmarshal(data, &s.String); err != nil {
+		return err
+	}
+	s.Valid = true
+	return nil
+}
 
 // OneOfStringNull is a 'string' or a 'null', and can be emptied
 type OneOfStringNull struct {
@@ -579,7 +668,7 @@ func (s {{ .Name }}) MarshalJSONStream(stream *jsoniter.Stream) {
 	stream.WriteObjectField("{{ .JSONName }}")
 	{{- if eq .Type "string" }}
 	stream.WriteString(s.{{ .Name }})
-	{{- else if eq .Type "OneOfStringNull" }}
+	{{- else if isStreamMarshaller .Type }}
 	s.{{ .Name }}.MarshalJSONStream(stream)
 	{{- else }}
 	stream.WriteVal(s.{{ .Name }})
@@ -637,7 +726,9 @@ func (s *{{ .Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 			s.{{ .Name }} = iter.ReadString()
 			{{- else if eq .Type "bool" }}
 			s.{{ .Name }} = iter.ReadBool()
-			{{ else }}
+			{{- else if isIteratorUnmarshaller .Type }}
+			s.{{ .Name }}.UnmarshalJSONIterator(iter)
+			{{- else }}
 			iter.ReadVal(&s.{{ .Name }})
 			{{- end}}
 			if iter.Error != nil {

@@ -59,6 +59,7 @@ func (g *Generator) CreateTypes() (err error) {
 			g.Aliases[a.Name] = a
 		}
 	}
+
 	return
 }
 
