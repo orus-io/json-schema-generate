@@ -7,5 +7,10 @@ for f in *.json; do
     dir=${name}_gen
     echo $f $name $dir
     mkdir -p $dir
-    ./schema-generate_gen -p $name -o $dir/gen.go $f
+    args=$(jq '.__test_args__' -r $f)
+    if [ "$args" = "null" ]; then
+        args=""
+    fi
+    echo $args
+    ./schema-generate_gen -p $name -o $dir/generated.go $args $f
 done
