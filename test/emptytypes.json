@@ -16,6 +16,9 @@
         "description": {
             "description": "Description of the product",
             "type": "string"
+        },
+        "price": {
+            "type": "number"
         }
     },
     "required": [

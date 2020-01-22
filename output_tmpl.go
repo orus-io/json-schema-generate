@@ -162,58 +162,77 @@ var (
 	jsonNullValue = []byte("null")
 )
 
-// NewEmptyString creates a non-empty EmptyString
-func NewEmptyString(s string) EmptyString {
-	return EmptyString{s, true}
+{{- range $t, $tname := .EmptyTypes }}
+
+// New{{ $tname }} creates a non-empty {{ $tname }}
+func New{{ $tname }}(value {{ $t }}) {{ $tname }} {
+	return {{ $tname }}{value, true}
 }
 
-// EmptyString is string or nothing
-type EmptyString struct {
-	String string
-	Valid bool // Valid is true if String is not empty
+// {{ $tname }} is {{ $t }} or nothing
+type {{ $tname }} struct {
+	{{ capitalize $t }} {{ $t }}
+	Valid bool // Valid is true if {{ capitalize $t }} is not empty
 }
 
-func (s EmptyString) IsEmpty() bool {
-	return !s.Valid
+func (t {{ $tname }}) IsEmpty() bool {
+	return !t.Valid
 }
 
-func (s EmptyString) MarshalJSON() ([]byte, error) {
-	if s.Valid {
-		return jsoniter.Marshal(s.String)
+func (t {{ $tname }}) MarshalJSON() ([]byte, error) {
+	if t.Valid {
+		return jsoniter.Marshal(t.{{ capitalize $t }})
 	}
 	return []byte("\"\""), nil
 }
 
-func (s *EmptyString) Set(value string) {
-	s.String = value
-	s.Valid = true
+func (t *{{ $tname }}) Set(value {{ $t }}) {
+	t.{{ capitalize $t }} = value
+	t.Valid = true
 }
 
-func (s *EmptyString) Unset() {
-	s.String = ""
-	s.Valid = false
+func (t *{{ $tname }}) Unset() {
+	{{- if eq $t "string" }}
+	t.String = ""
+	{{- else if eq $t "bool" }}
+	t.Bool = false
+	{{- else if eq $t "int" }}
+	t.Int = 0
+	{{- else if eq $t "float64" }}
+	t.Float64 = 0.0
+	{{- end}}
+	t.Valid = false
 }
 
-func (s EmptyString) MarshalJSONStream(stream *jsoniter.Stream) {
-	if s.Valid {
-		stream.WriteString(s.String)
+func (t {{ $tname }}) MarshalJSONStream(stream *jsoniter.Stream) {
+	if t.Valid {
+		stream.Write{{ capitalize $t }}(t.{{ capitalize $t }})
 	} else {
+		{{- if eq $t "string" }}
 		stream.WriteString("")
+		{{- else if eq $t "bool" }}
+		stream.WriteBool(false)
+		{{- else if eq $t "int" }}
+		stream.WriteInt(0)
+		{{- else if eq $t "float64" }}
+		stream.WriteFloat64(0.0)
+		{{- end}}
 	}
 }
 
-func (s *EmptyString) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
-	s.String = iter.ReadString()
-	s.Valid = iter.Error == nil
+func (t *{{ $tname }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
+	t.{{ capitalize $t }} = iter.Read{{ capitalize $t }}()
+	t.Valid = iter.Error == nil
 }
 
-func (s *EmptyString) UnmarshalJSON(data []byte) error {
-	if err := jsoniter.Unmarshal(data, &s.String); err != nil {
+func (t *{{ $tname }}) UnmarshalJSON(data []byte) error {
+	if err := jsoniter.Unmarshal(data, &t.{{ capitalize $t }}); err != nil {
 		return err
 	}
-	s.Valid = true
+	t.Valid = true
 	return nil
 }
+{{- end }}
 
 // OneOfStringNull is a 'string' or a 'null', and can be emptied
 type OneOfStringNull struct {

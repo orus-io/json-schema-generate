@@ -38,6 +38,7 @@ type OutputData struct {
 	Aliases     []Field
 	OneOfs      map[string]OneOf
 	Backquote   string
+	EmptyTypes  map[string]string
 
 	AlwaysAcceptFalse bool
 }
@@ -83,6 +84,13 @@ func Output(w io.Writer, g *Generator, pkg string, alwaysAcceptFalse bool, useEm
 		OneOfs:            g.OneOfs,
 		Backquote:         "`",
 		AlwaysAcceptFalse: alwaysAcceptFalse,
+
+		EmptyTypes: map[string]string{
+			"string":  "EmptyString",
+			"bool":    "EmptyBool",
+			"int":     "EmptyInt",
+			"float64": "EmptyFloat64",
+		},
 	}
 
 	for _, k := range getOrderedStructNames(structs) {
@@ -90,13 +98,10 @@ func Output(w io.Writer, g *Generator, pkg string, alwaysAcceptFalse bool, useEm
 		if useEmptyTypes {
 			for n, f := range s.Fields {
 				if !f.Required {
-					switch f.Type {
-					case "string":
-						f.Type = "EmptyString"
-					default:
-						continue
+					if t, ok := data.EmptyTypes[f.Type]; ok {
+						f.Type = t
+						s.Fields[n] = f
 					}
-					s.Fields[n] = f
 				}
 			}
 		}
