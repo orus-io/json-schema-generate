@@ -9,8 +9,6 @@ var streamMarshallerTypes = []string{
 	"EmptyBool",
 	"EmptyNumber",
 	"EmptyString",
-	"OneOfBoolNull",
-	"OneOfNumberNull",
 	"OneOfStringNull",
 }
 
@@ -18,8 +16,6 @@ var iteratorUnmashallerTypes = []string{
 	"EmptyBool",
 	"EmptyNumber",
 	"EmptyString",
-	"OneOfBoolNull",
-	"OneOfNumberNull",
 	"OneOfStringNull",
 }
 
