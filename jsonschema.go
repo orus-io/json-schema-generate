@@ -30,6 +30,8 @@ type Schema struct {
 	// http://json-schema.org/draft-07/json-schema-validation.html#rfc.section.6.1.1
 	TypeValue interface{} `json:"type"`
 
+	Enum []json.RawMessage
+
 	// MultipleOf is the schema 'multipleOf' attribute
 	MultipleOf decimal.Decimal
 

@@ -287,6 +287,9 @@ func (g *Generator) processObject(name string, schema *Schema) (typ string, err 
 			Required:    contains(schema.Required, propKey),
 			Description: prop.Description,
 		}
+		for _, v := range prop.Enum {
+			f.Enum = append(f.Enum, string(v))
+		}
 		if f.Required {
 			strct.GenerateCode = true
 		}
@@ -482,6 +485,7 @@ type Field struct {
 	// The golang type of the field, e.g. a built-in type like "string" or the name of a struct generated
 	// from the JSON schema.
 	Type string
+	Enum []string
 	// Required is set to true when the field is required.
 	Required    bool
 	Description string

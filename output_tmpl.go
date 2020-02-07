@@ -597,17 +597,25 @@ func (o *{{ $oneOf.Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 	case jsoniter.NumberValue:
 		o.SetFloat64(iter.ReadFloat64())
 	{{- end }}
-	{{- if oneOfContainsJsonType . "object" }}
+	{{- if oneOfContainsJsonType . "" }}
 	case jsoniter.ObjectValue:
-		any := iter.ReadAny()
+		// I would have used ReadAny, but its 'ToVal' function does not returns
+		// the underlying iterator errors, hence makes it impossible to implement
+		// a proper oneOf
+		buf := iter.SkipAndReturnBytes()
+
+		var lastError error
 
 		{{- range .Types }}
-		{{- if eq "object" .JSONType }}
+		{{- if eq "" .JSONType }}
 
 		{ // attempt to read a {{ .Type }}
+			subIter := jsoniter.ConfigDefault.BorrowIterator(buf)
 			var value {{ deferedType .Type }}
-			any.ToVal(&value)
-			if any.LastError() == nil {
+			subIter.ReadValue(&value)
+			lastError = subIter.Error
+			jsoniter.ConfigDefault.ReturnIterator(subIter)
+			if lastError == nil {
 				o.Set{{ .ShortType }}({{ if ispointer .Type }}&{{ end }}value)
 				return
 			}
@@ -615,7 +623,7 @@ func (o *{{ $oneOf.Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 		{{- end }}
 		{{- end }}
 
-		iter.Error = any.LastError()
+		iter.Error = lastError
 	{{- end }}
 	}
 }
@@ -739,6 +747,17 @@ func (s *{{ .Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 			{{- end}}
 			{{- if eq .Type "string" }}
 			s.{{ .Name }} = iter.ReadString()
+			{{- if .Enum }}
+			{{- if eq 1 (len .Enum) }}
+			if s.{{ .Name }} != {{ index .Enum 0 }} {
+				iter.ReportError(
+					"{{ .JSONName }}",
+					fmt.Sprintf("Expected %s, got \"%s\"", {{ index .Enum 0 }}, s.{{ .Name }}),
+				)
+			}
+			{{- else}}
+			{{- end }}
+			{{- end }}
 			{{- else if eq .Type "bool" }}
 			s.{{ .Name }} = iter.ReadBool()
 			{{- else if isIteratorUnmarshaller .Type }}
