@@ -612,7 +612,7 @@ func (o *{{ $oneOf.Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 		{ // attempt to read a {{ .Type }}
 			subIter := jsoniter.ConfigDefault.BorrowIterator(buf)
 			var value {{ deferedType .Type }}
-			subIter.ReadValue(&value)
+			subIter.ReadVal(&value)
 			lastError = subIter.Error
 			jsoniter.ConfigDefault.ReturnIterator(subIter)
 			if lastError == nil {
