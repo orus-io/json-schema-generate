@@ -306,6 +306,19 @@ func (value OneOfStringNull) MarshalJSON() ([]byte, error) {
 		ValueTypeToString(value.currentType))
 }
 
+func (value OneOfStringNull) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
+	switch t := iter.WhatIsNext(); t {
+	case jsoniter.NilValue:
+		iter.ReadNil()
+		value.currentType = jsoniter.NilValue
+	case jsoniter.StringValue:
+		value.currentType = jsoniter.StringValue
+		value.stringValue = iter.ReadString()
+	default:
+		iter.ReportError("Read", fmt.Sprintf("unexpected value type: %v", t))
+	}
+}
+
 // UnmarshalJSON unserialize a OneOfStringNull from json
 func (value *OneOfStringNull) UnmarshalJSON(data []byte) error {
 	if {{ .Pkg "bytes" }}.Equal(data, jsonNullValue) {
