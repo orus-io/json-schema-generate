@@ -306,7 +306,7 @@ func (value OneOfStringNull) MarshalJSON() ([]byte, error) {
 		ValueTypeToString(value.currentType))
 }
 
-func (value OneOfStringNull) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
+func (value *OneOfStringNull) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 	switch t := iter.WhatIsNext(); t {
 	case jsoniter.NilValue:
 		iter.ReadNil()
