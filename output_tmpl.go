@@ -756,6 +756,7 @@ func (s *{{ .Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 					return
 				}
 				// received 'false', which we accept and ignore for now
+				continue
 			}
 			{{- end}}
 			{{- if eq .Type "string" }}
