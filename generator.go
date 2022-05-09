@@ -418,6 +418,9 @@ func (g *Generator) getSchemaName(keyName string, schema *Schema) string {
 
 // getGolangName strips invalid characters out of golang struct or field names.
 func getGolangName(s string) string {
+	if s == "__type__" {
+		return "DataType"
+	}
 	buf := bytes.NewBuffer([]byte{})
 	for i, v := range splitOnAll(s, isNotAGoNameCharacter) {
 		if i == 0 && strings.IndexAny(v, "0123456789") == 0 {
