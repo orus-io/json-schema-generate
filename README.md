@@ -5,6 +5,11 @@ Generates Go (golang) Structs and Validation code from JSON schema.
 # Requirements
 
 * Go 1.8+
+* Golint :
+
+```console
+$ sudo apt install golint
+```
 
 # Usage
 
