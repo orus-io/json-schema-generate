@@ -610,7 +610,7 @@ func (o *{{ $oneOf.Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 	case jsoniter.NumberValue:
 		o.SetFloat64(iter.ReadFloat64())
 	{{- end }}
-	{{- if oneOfContainsJsonType . "" }}
+	{{- if oneOfContainsJsonType . "object" }}
 	case jsoniter.ObjectValue:
 		// I would have used ReadAny, but its 'ToVal' function does not returns
 		// the underlying iterator errors, hence makes it impossible to implement
@@ -620,7 +620,7 @@ func (o *{{ $oneOf.Name }}) UnmarshalJSONIterator(iter *jsoniter.Iterator) {
 		var lastError error
 
 		{{- range .Types }}
-		{{- if eq "" .JSONType }}
+		{{- if eq "object" .JSONType }}
 
 		{ // attempt to read a {{ .Type }}
 			subIter := jsoniter.ConfigDefault.BorrowIterator(buf)
