@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"strconv"
 
 	"github.com/shopspring/decimal"
 )
@@ -130,10 +131,11 @@ func (schema *Schema) ID() string {
 // Type returns the type which is permitted or an empty string if the type field is missing.
 // The 'type' field in JSON schema also allows for a single string value or an array of strings.
 // Examples:
-//   "a" => "a", false
-//   [] => "", false
-//   ["a"] => "a", false
-//   ["a", "b"] => "a", true
+//
+//	"a" => "a", false
+//	[] => "", false
+//	["a"] => "a", false
+//	["a", "b"] => "a", true
 func (schema *Schema) Type() (firstOrDefault string, multiple bool) {
 	// We've got a single value, e.g. { "type": "object" }
 	if ts, ok := schema.TypeValue.(string); ok {
@@ -274,6 +276,22 @@ func (schema *Schema) updateParentLinks() {
 	if schema.Items != nil {
 		schema.Items.Parent = schema
 		schema.Items.updateParentLinks()
+	}
+
+	for i, s := range schema.AllOf {
+		s.JSONKey = strconv.Itoa(i)
+		s.Parent = schema
+		s.updateParentLinks()
+	}
+	for i, s := range schema.AnyOf {
+		s.JSONKey = strconv.Itoa(i)
+		s.Parent = schema
+		s.updateParentLinks()
+	}
+	for i, s := range schema.OneOf {
+		s.JSONKey = strconv.Itoa(i)
+		s.Parent = schema
+		s.updateParentLinks()
 	}
 }
 
