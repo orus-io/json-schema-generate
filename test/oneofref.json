@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "OneOfRefTest",
+  "type": "object",
+  "definitions": {
+    "thing": {
+      "type": "object",
+      "title": "Thing",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "data": {
+      "oneOf": [
+        {"$ref": "#/definitions/thing"}
+      ]
+    }
+  }
+}
