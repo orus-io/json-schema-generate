@@ -227,7 +227,9 @@ func ParseWithSchemaKeyRequired(schema string, uri *url.URL, schemaKeyRequired b
 func (schema *Schema) Init() {
 	root := schema.GetRoot()
 	root.updateParentLinks()
-	root.ensureSchemaKeyword()
+	if err := root.ensureSchemaKeyword(); err != nil {
+		panic(err)
+	}
 	root.updatePathElements()
 }
 

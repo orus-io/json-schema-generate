@@ -27,9 +27,7 @@ var funcs = template.FuncMap{
 	},
 	// fieldName creates a field name from a data type
 	"fieldName": func(s string) string {
-		if strings.HasPrefix(s, "*") {
-			s = s[1:]
-		}
+		s = strings.TrimPrefix(s, "*")
 		return strings.ToLower(s[0:1]) + s[1:]
 	},
 	// capitalize returns the string with the first letter uppered
@@ -38,9 +36,7 @@ var funcs = template.FuncMap{
 	},
 	// DeferedType removes a leading '*' from a data type
 	"deferedType": func(s string) string {
-		if strings.HasPrefix(s, "*") {
-			s = s[1:]
-		}
+		s = strings.TrimPrefix(s, "*")
 		return s
 	},
 	// isplainjsontype returns true if the given json type is a pod

@@ -98,7 +98,9 @@ func (g *Generator) processReference(schema *Schema) (string, error) {
 // returns the type refered to by schema after resolving all dependencies
 func (g *Generator) processSchema(schemaName string, schema *Schema) (typ string, err error) {
 	if len(schema.Definitions) > 0 {
-		g.processDefinitions(schema)
+		if err := g.processDefinitions(schema); err != nil {
+			return "", err
+		}
 	}
 	schema.FixMissingTypeValue()
 	// if we have multiple schema types, the golang type will be interface{}
@@ -198,9 +200,7 @@ func (g *Generator) generateOneOf(schemaName string, schema *Schema) (string, er
 		if subSchema.Title != "" {
 			shortType = getGolangName(subSchema.Title)
 		}
-		if strings.HasPrefix(shortType, "*") {
-			shortType = shortType[1:]
-		}
+		shortType = strings.TrimPrefix(shortType, "*")
 		shortType = strings.ToUpper(shortType[:1]) + shortType[1:]
 		oneOf.Types = append(oneOf.Types, OneOfType{
 			ShortType: shortType,
@@ -339,7 +339,7 @@ func (g *Generator) processObject(name string, schema *Schema) (typ string, err 
 	}
 	// additionalProperties as either true (everything) or false (nothing)
 	if schema.AdditionalProperties != nil && schema.AdditionalProperties.AdditionalPropertiesBool != nil {
-		if *schema.AdditionalProperties.AdditionalPropertiesBool == true {
+		if *schema.AdditionalProperties.AdditionalPropertiesBool {
 			// everything is valid additional
 			subTyp := "map[string]interface{}"
 			f := Field{
