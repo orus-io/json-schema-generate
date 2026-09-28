@@ -184,7 +184,16 @@ func (g *Generator) generateOneOf(schemaName string, schema *Schema) (string, er
 		if err != nil {
 			return "", err
 		}
-		jsonType, _ := subSchema.Type()
+		// Resolve the JSON type: for $ref sub-schemas, subSchema.Type() returns ""
+		// because the type lives on the referenced schema. Resolve it so the
+		// generated UnmarshalJSONIterator picks the right case (e.g. ObjectValue).
+		typeSchema := subSchema
+		if subSchema.Reference != "" {
+			if resolved, err := g.resolver.GetSchemaByReference(subSchema); err == nil {
+				typeSchema = resolved
+			}
+		}
+		jsonType, _ := typeSchema.Type()
 		shortType := typ
 		if subSchema.Title != "" {
 			shortType = getGolangName(subSchema.Title)
