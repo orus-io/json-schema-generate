@@ -90,7 +90,9 @@ func (r *RefResolver) mapPaths(schema *Schema) error {
 			return err
 		}
 	}
-	r.updateURIs(schema, *rootURI, false, false)
+	if err := r.updateURIs(schema, *rootURI, false, false); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -106,7 +108,7 @@ func (r *RefResolver) updateURIs(schema *Schema, baseURI url.URL, checkCurrentID
 			}
 			// if it's a JSON fragment and we're coming from part of the tree where the baseURI has changed, we need to
 			// ignore the fragment, since it won't be resolvable under the current baseURI.
-			if !(strings.HasPrefix(id, "#") && ignoreFragments) {
+			if !strings.HasPrefix(id, "#") || !ignoreFragments {
 				// map all the subschema under the new base
 				resolved := baseURI.ResolveReference(newBase)
 				if err := r.InsertURI(resolved.String(), schema); err != nil {
@@ -131,7 +133,9 @@ func (r *RefResolver) updateURIs(schema *Schema, baseURI url.URL, checkCurrentID
 		if err := r.InsertURI(newBaseURI.String(), subSchema); err != nil {
 			return err
 		}
-		r.updateURIs(subSchema, newBaseURI, true, ignoreFragments)
+		if err := r.updateURIs(subSchema, newBaseURI, true, ignoreFragments); err != nil {
+			return err
+		}
 	}
 	for k, subSchema := range schema.Properties {
 		newBaseURI := baseURI
@@ -139,17 +143,23 @@ func (r *RefResolver) updateURIs(schema *Schema, baseURI url.URL, checkCurrentID
 		if err := r.InsertURI(newBaseURI.String(), subSchema); err != nil {
 			return err
 		}
-		r.updateURIs(subSchema, newBaseURI, true, ignoreFragments)
+		if err := r.updateURIs(subSchema, newBaseURI, true, ignoreFragments); err != nil {
+			return err
+		}
 	}
 	if schema.AdditionalProperties != nil {
 		newBaseURI := baseURI
 		newBaseURI.Fragment += "/additionalProperties"
-		r.updateURIs((*Schema)(schema.AdditionalProperties), newBaseURI, true, ignoreFragments)
+		if err := r.updateURIs((*Schema)(schema.AdditionalProperties), newBaseURI, true, ignoreFragments); err != nil {
+			return err
+		}
 	}
 	if schema.Items != nil {
 		newBaseURI := baseURI
 		newBaseURI.Fragment += "/items"
-		r.updateURIs(schema.Items, newBaseURI, true, ignoreFragments)
+		if err := r.updateURIs(schema.Items, newBaseURI, true, ignoreFragments); err != nil {
+			return err
+		}
 	}
 	return nil
 }

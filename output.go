@@ -122,12 +122,14 @@ func Output(w io.Writer, g *Generator, pkg string, alwaysAcceptFalse bool, useEm
 		panic(err)
 	}
 
-	w.Write(codeBuf.Bytes())
+	if _, err := w.Write(codeBuf.Bytes()); err != nil {
+		panic(err)
+	}
 }
 
 func cleanPackageName(pkg string) string {
-	pkg = strings.Replace(pkg, ".", "", -1)
-	pkg = strings.Replace(pkg, "_", "", -1)
-	pkg = strings.Replace(pkg, "-", "", -1)
+	pkg = strings.ReplaceAll(pkg, ".", "")
+	pkg = strings.ReplaceAll(pkg, "_", "")
+	pkg = strings.ReplaceAll(pkg, "-", "")
 	return pkg
 }

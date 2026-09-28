@@ -1,0 +1,3 @@
+[vars]
+mise_en_orbeet_version = "branch/default"
+mise_en_orbeet_modules = "go"

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -14,7 +13,7 @@ import (
 func ReadInputFiles(inputFiles []string, schemaKeyRequired bool) ([]*Schema, error) {
 	schemas := make([]*Schema, len(inputFiles))
 	for i, file := range inputFiles {
-		b, err := ioutil.ReadFile(file)
+		b, err := os.ReadFile(file)
 		if err != nil {
 			return nil, errors.New("failed to read the input file with error " + err.Error())
 		}
