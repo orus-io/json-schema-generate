@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
 	"strings"
@@ -778,4 +779,70 @@ func TestTypeAliases(t *testing.T) {
 // Root is an example of a generated type.
 type Root struct {
 	Name interface{} `json:"name,omitempty"`
+}
+
+// TestThatMarshalJSONIsGeneratedWithoutRequiredFields reproduces the issue
+// where a struct that previously had required fields loses its MarshalJSON /
+// UnmarshalJSON methods once the "required" key is removed or set to an empty
+// list.
+//
+// The root cause is in processObject: GenerateCode is only set to true when a
+// field is required or when additionalProperties are present. When no field is
+// required, GenerateCode stays false and the output template skips emitting
+// the (Un)MarshalJSON methods entirely.
+func TestThatMarshalJSONIsGeneratedWithoutRequiredFields(t *testing.T) {
+	tests := []struct {
+		name     string
+		required []string
+	}{
+		{
+			name:     "empty_required_list",
+			required: []string{},
+		},
+		{
+			name:     "nil_required",
+			required: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := &Schema{
+				Title:     "NoRequired",
+				TypeValue: "object",
+				Properties: map[string]*Schema{
+					"name": {TypeValue: "string"},
+				},
+				Required: tt.required,
+			}
+			root.Init()
+
+			g := New(root)
+			if err := g.CreateTypes(); err != nil {
+				t.Fatal(err)
+			}
+
+			strct, ok := g.Structs["NoRequired"]
+			if !ok {
+				t.Fatal("NoRequired struct not generated")
+			}
+
+			if !strct.GenerateCode {
+				t.Error("GenerateCode should be true even when no fields are required, " +
+					"otherwise MarshalJSON/UnmarshalJSON won't be generated")
+			}
+
+			// Verify the generated source actually contains MarshalJSON.
+			var buf bytes.Buffer
+			Output(&buf, g, "test", false, false)
+			output := buf.String()
+
+			if !strings.Contains(output, "func (s *NoRequired) MarshalJSON()") {
+				t.Error("generated output does not contain MarshalJSON for NoRequired struct")
+			}
+			if !strings.Contains(output, "func (s *NoRequired) UnmarshalJSON(") {
+				t.Error("generated output does not contain UnmarshalJSON for NoRequired struct")
+			}
+		})
+	}
 }

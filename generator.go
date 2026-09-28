@@ -290,10 +290,8 @@ func (g *Generator) processObject(name string, schema *Schema) (typ string, err 
 		for _, v := range prop.Enum {
 			f.Enum = append(f.Enum, string(v))
 		}
-		if f.Required {
-			strct.GenerateCode = true
-		}
 		strct.Fields[f.Name] = f
+		strct.GenerateCode = true
 	}
 	// additionalProperties with typed sub-schema
 	if schema.AdditionalProperties != nil && schema.AdditionalProperties.AdditionalPropertiesBool == nil {
