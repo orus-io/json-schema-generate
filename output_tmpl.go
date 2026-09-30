@@ -519,6 +519,7 @@ func (o {{ $oneOf.Name }}) MarshalJSON() ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	stream := jsoniter.ConfigDefault.BorrowStream(buf)
 	o.MarshalJSONStream(stream)
+	stream.Flush()
 	err := stream.Error
 	jsoniter.ConfigDefault.ReturnStream(stream)
 	if err != nil {
