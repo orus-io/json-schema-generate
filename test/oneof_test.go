@@ -1,11 +1,13 @@
 package test
 
 import (
+	"encoding/json"
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
 	oneof "github.com/orus-io/json-schema-generate/test/oneof_gen"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOneOf(t *testing.T) {
@@ -31,4 +33,22 @@ func TestOneOf(t *testing.T) {
 	_ = assert.NoError(t, jsoniter.UnmarshalFromString(`{"age": 12}`, &d)) &&
 		assert.True(t, d.IsNotSoAnonymous()) &&
 		assert.Equal(t, 12, d.NotSoAnonymous().Age)
+}
+
+// TestOneOfMarshalStructWithoutRequiredFields verifies that a oneOf type
+// can be marshalled correctly when it holds a struct value that has no
+// required fields (and thus no custom MarshalJSON).
+//
+// When a struct has no required fields, the generator does not emit a
+// custom MarshalJSON for it. jsoniter then uses its built-in struct
+// encoder, which writes directly to stream.buf without flushing to the
+// underlying io.Writer. The oneOf MarshalJSON must call stream.Flush()
+// to ensure the data reaches the output buffer.
+func TestOneOfMarshalStructWithoutRequiredFields(t *testing.T) {
+	d := oneof.ComplexdataType{}
+	d.SetNotSoAnonymous(&oneof.ComplexdataNotSoAnonymous{Age: 42})
+
+	b, err := json.Marshal(d)
+	require.NoError(t, err)
+	assert.Equal(t, `{"age":42}`, string(b))
 }
