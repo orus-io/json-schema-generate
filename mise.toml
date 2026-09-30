@@ -1,3 +1,28 @@
 [vars]
 mise_en_orbeet_version = "branch/default"
 mise_en_orbeet_modules = "go"
+
+[tasks.generate]
+depends = []
+description = "Generate all needed source files"
+run = """
+CGO_ENABLED=0 go build -o schema-generate ./cmd/schema-generate/ && \
+cd test && \
+rm -rf *_gen && \
+for f in *.json; do \
+    name=$(echo $f | sed s/.json//); \
+    dir=${name}_gen; \
+    mkdir -p "$dir"; \
+    args=$(jq '.__test_args__' -r "$f"); \
+    if [ "$args" = "null" ]; then args=""; fi; \
+    ../schema-generate -p "$name" -o "$dir/generated.go" $args "$f" || true; \
+done
+"""
+
+[tasks.test]
+depends = ["generate"]
+description = "Run the tests"
+run = """
+go test ./...
+cd test && go test ./...
+"""
