@@ -159,7 +159,7 @@ func (g *Generator) processSchema(schemaName string, schema *Schema) (typ string
 	case len(schema.OneOf) != 0:
 		return g.processOneOf(schemaName, schema)
 	}
-	return // return interface{}
+	return typ, nil
 }
 
 func getOneOfTypeNull(typ string) string {
