@@ -166,8 +166,11 @@ func (r *RefResolver) updateURIs(schema *Schema, baseURI url.URL, checkCurrentID
 
 // InsertURI to the references.
 func (r *RefResolver) InsertURI(uri string, schema *Schema) error {
-	if _, ok := r.pathToSchema[uri]; ok {
-		return fmt.Errorf("attempted to add duplicate uri: %s/%s", schema.GetRoot().ID(), uri)
+	if existing, ok := r.pathToSchema[uri]; ok {
+		if existing != schema {
+			return fmt.Errorf("attempted to add duplicate uri: %s/%s", schema.GetRoot().ID(), uri)
+		}
+		return nil
 	}
 	r.pathToSchema[uri] = schema
 	return nil
