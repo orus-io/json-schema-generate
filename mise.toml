@@ -3,8 +3,18 @@ mise_en_orbeet_version = "branch/default"
 mise_en_orbeet_modules = "go"
 
 [tasks.generate]
-depends = []
 description = "Generate all needed source files"
+sources = [
+  "*.go",
+  "cmd/schema-generate/*.go",
+  "go.mod",
+  "go.sum",
+  "test/*.json",
+]
+outputs = [
+  "schema-generate",
+  "test/*_gen/generated.go",
+]
 run = """
 CGO_ENABLED=0 go build -o schema-generate ./cmd/schema-generate/ && \
 cd test && \
@@ -23,6 +33,13 @@ done
 depends = ["generate"]
 description = "Run the tests"
 run = """
-go test ./...
-cd test && go test ./...
+go test -race ./...
+cd test && go test -race ./...
+"""
+
+[tasks.clean]
+description = "Remove the generator binary and generated test code"
+run = """
+rm -f schema-generate
+rm -rf test/*_gen
 """
