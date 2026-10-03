@@ -4,28 +4,44 @@ Generates Go (golang) Structs and Validation code from JSON schema.
 
 # Requirements
 
-* Go 1.8+
+* [mise](https://mise.jdx.dev/) — manages the Go toolchain and project tasks
 
 # Usage
 
-Install
+Build the generator and generate test sources
 
 ```console
-$ go get -u github.com/orus-io/json-schema-generate/...
+$ mise run generate
 ```
 
-or
-
-Build
+Run the test suite
 
 ```console
-$ make
+$ mise run test
 ```
 
-Run
+Clean the generator binary and generated code
 
 ```console
-$ schema-generate exampleschema.json
+$ mise run clean
+```
+
+Run the generator manually
+
+```console
+$ go build -o schema-generate ./cmd/schema-generate
+$ ./schema-generate -p main -o output.go exampleschema.json
+```
+
+Flags
+
+```
+-o string              The output file for the schema.
+-p string              The package that the structs are created in. (default "main")
+-i string              A single file path (used for backwards compatibility).
+-alwaysAcceptFalse     Any field will accept decoding 'false' and ignore it.
+-useEmptyTypes         Use types with a empty types if non-required.
+-schemaKeyRequired     Allow input files with no $schema key.
 ```
 
 # Example
