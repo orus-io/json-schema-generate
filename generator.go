@@ -1,9 +1,11 @@
+// Package generate produces Go structs and validation code from JSON schemas.
 package generate
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -95,7 +97,7 @@ func (g *Generator) processReference(schema *Schema) (string, error) {
 	return refSchema.GeneratedType, nil
 }
 
-// returns the type refered to by schema after resolving all dependencies
+// returns the type referred to by schema after resolving all dependencies
 func (g *Generator) processSchema(schemaName string, schema *Schema) (typ string, err error) {
 	if len(schema.Definitions) > 0 {
 		if err := g.processDefinitions(schema); err != nil {
@@ -106,7 +108,8 @@ func (g *Generator) processSchema(schemaName string, schema *Schema) (typ string
 	// if we have multiple schema types, the golang type will be interface{}
 	typ = "interface{}"
 	types, isMultiType := schema.MultiType()
-	if len(types) > 0 {
+	switch {
+	case len(types) > 0:
 		for _, schemaType := range types {
 			name := schemaName
 			if isMultiType {
@@ -151,9 +154,9 @@ func (g *Generator) processSchema(schemaName string, schema *Schema) (typ string
 				}
 			}
 		}
-	} else if schema.Reference != "" {
+	case schema.Reference != "":
 		return g.processReference(schema)
-	} else if len(schema.OneOf) != 0 {
+	case len(schema.OneOf) != 0:
 		return g.processOneOf(schemaName, schema)
 	}
 	return // return interface{}
@@ -258,7 +261,7 @@ func (g *Generator) processArray(name string, schema *Schema) (typeStr string, e
 				Name:        name,
 				JSONName:    "",
 				Type:        finalType,
-				Required:    contains(schema.Required, name),
+				Required:    slices.Contains(schema.Required, name),
 				Description: schema.Description,
 			}
 			g.Aliases[array.Name] = array
@@ -293,7 +296,7 @@ func (g *Generator) processObject(name string, schema *Schema) (typ string, err 
 			Name:        fieldName,
 			JSONName:    propKey,
 			Type:        fieldType,
-			Required:    contains(schema.Required, propKey),
+			Required:    slices.Contains(schema.Required, propKey),
 			Description: prop.Description,
 		}
 		for _, v := range prop.Enum {
@@ -362,15 +365,6 @@ func (g *Generator) processObject(name string, schema *Schema) (typ string, err 
 	g.Structs[strct.Name] = strct
 	// objects are always a pointer
 	return getPrimitiveTypeName("object", name, true)
-}
-
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func getPrimitiveTypeName(schemaType string, subType string, pointer bool) (name string, err error) {
