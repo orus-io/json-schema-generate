@@ -41,6 +41,7 @@ linters:
     - recvcheck
     - goprintffuncname
     - nakedret
+    - wrapcheck
 
   settings:
     gocyclo:
