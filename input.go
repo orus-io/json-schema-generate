@@ -30,23 +30,23 @@ func ReadInputFiles(inputFiles []string, schemaKeyRequired bool) ([]*Schema, err
 
 		schemas[i], err = ParseWithSchemaKeyRequired(string(b), &fileURI, schemaKeyRequired)
 		if err != nil {
-			if jsonError, ok := err.(*json.SyntaxError); ok {
-				line, character, lcErr := lineAndCharacter(b, int(jsonError.Offset))
-				errStr := fmt.Sprintf("cannot parse JSON schema due to a syntax error at %s line %d, character %d: %v\n", file, line, character, jsonError.Error())
+			if syntaxError, ok := errors.AsType[*json.SyntaxError](err); ok {
+				line, character, lcErr := lineAndCharacter(b, int(syntaxError.Offset))
+				errStr := fmt.Sprintf("cannot parse JSON schema due to a syntax error at %s line %d, character %d: %v\n", file, line, character, syntaxError.Error())
 				if lcErr != nil {
 					errStr += fmt.Sprintf("couldn't find the line and character position of the error due to error %v\n", lcErr)
 				}
 				return nil, errors.New(errStr)
 			}
-			if jsonError, ok := err.(*json.UnmarshalTypeError); ok {
-				line, character, lcErr := lineAndCharacter(b, int(jsonError.Offset))
-				errStr := fmt.Sprintf("the JSON type '%v' cannot be converted into the Go '%v' type on struct '%s', field '%v'. See input file %s line %d, character %d\n", jsonError.Value, jsonError.Type.Name(), jsonError.Struct, jsonError.Field, file, line, character)
+			if unmarshalTypeError, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
+				line, character, lcErr := lineAndCharacter(b, int(unmarshalTypeError.Offset))
+				errStr := fmt.Sprintf("the JSON type '%v' cannot be converted into the Go '%v' type on struct '%s', field '%v'. See input file %s line %d, character %d\n", unmarshalTypeError.Value, unmarshalTypeError.Type.Name(), unmarshalTypeError.Struct, unmarshalTypeError.Field, file, line, character)
 				if lcErr != nil {
 					errStr += fmt.Sprintf("couldn't find the line and character position of the error due to error %v\n", lcErr)
 				}
 				return nil, errors.New(errStr)
 			}
-			return nil, fmt.Errorf("failed to parse the input JSON schema file %s with error %v", file, err)
+			return nil, fmt.Errorf("failed to parse the input JSON schema file %s with error %w", file, err)
 		}
 	}
 

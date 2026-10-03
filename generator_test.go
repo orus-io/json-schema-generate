@@ -103,10 +103,8 @@ func TestFieldGeneration(t *testing.T) {
 
 	if strct, ok := g.Structs["Property7"]; !ok {
 		t.Fatal("Property7 wasn't generated")
-	} else {
-		if len(strct.Fields) != 0 {
-			t.Fatal("Property7 expected 0 fields")
-		}
+	} else if len(strct.Fields) != 0 {
+		t.Fatal("Property7 expected 0 fields")
 	}
 }
 
@@ -153,7 +151,7 @@ func TestFieldGenerationWithArrayReferences(t *testing.T) {
 	g := New(&root)
 	err := g.CreateTypes()
 
-	//Output(os.Stderr, g, "test")
+	// Output(os.Stderr, g, "test")
 
 	if err != nil {
 		t.Error("Failed to get the fields: ", err)
@@ -202,7 +200,7 @@ func TestNestedStructGeneration(t *testing.T) {
 	err := g.CreateTypes()
 	results := g.Structs
 
-	//Output(os.Stderr, g, "test")
+	// Output(os.Stderr, g, "test")
 
 	if err != nil {
 		t.Error("Failed to create structs: ", err)
@@ -596,7 +594,7 @@ func TestThatTypesWithMultipleDefinitionsAreGeneratedAsEmptyInterfaces(t *testin
 	root := &Schema{}
 	root.Title = "Multiple possible types"
 	root.Properties = map[string]*Schema{
-		"name": {TypeValue: []interface{}{"string", "integer"}},
+		"name": {TypeValue: []any{"string", "integer"}},
 	}
 
 	root.Init()
@@ -648,7 +646,7 @@ func TestThatUnmarshallingIsPossible(t *testing.T) {
 			name:  "map",
 			input: `{ "name": { "key": "value" } }`,
 			expected: Root{
-				Name: map[string]interface{}{
+				Name: map[string]any{
 					"key": "value",
 				},
 			},
@@ -657,7 +655,7 @@ func TestThatUnmarshallingIsPossible(t *testing.T) {
 			name:  "array",
 			input: `{ "name": [ "a", "b" ] }`,
 			expected: Root{
-				Name: []interface{}{"a", "b"},
+				Name: []any{"a", "b"},
 			},
 		},
 		{
@@ -740,7 +738,7 @@ func TestTypeAliases(t *testing.T) {
 			gotype: "map[string]interface{}",
 			input: &Schema{
 				TypeValue:            "object",
-				AdditionalProperties: (*AdditionalProperties)(&Schema{TypeValue: []interface{}{"string", "integer"}}),
+				AdditionalProperties: (*AdditionalProperties)(&Schema{TypeValue: []any{"string", "integer"}}),
 			},
 			structs: 0,
 			aliases: 1,
@@ -777,5 +775,5 @@ func TestTypeAliases(t *testing.T) {
 
 // Root is an example of a generated type.
 type Root struct {
-	Name interface{} `json:"name,omitempty"`
+	Name any `json:"name,omitempty"`
 }
