@@ -85,28 +85,26 @@ func TestFieldGeneration(t *testing.T) {
 		t.Errorf("Expected 8 results, but got %d results", len(g.Structs))
 	}
 
-	testField(g.Structs["TestFieldGeneration"].Fields["Property1"], "property1", "Property1", "string", false, t)
-	testField(g.Structs["TestFieldGeneration"].Fields["Property2"], "property2", "Property2", "*Address", true, t)
-	testField(g.Structs["TestFieldGeneration"].Fields["Property3"], "property3", "Property3", "*SubObj1", false, t)
-	testField(g.Structs["TestFieldGeneration"].Fields["Property4"], "property4", "Property4", "map[string]int", false, t)
-	testField(g.Structs["TestFieldGeneration"].Fields["Property5"], "property5", "Property5", "*SubObj3", false, t)
-	testField(g.Structs["TestFieldGeneration"].Fields["Property6"], "property6", "Property6", "map[string]*SubObj4a", false, t)
-	testField(g.Structs["TestFieldGeneration"].Fields["Property7"], "property7", "Property7", "*Property7", false, t)
-	testField(g.Structs["TestFieldGeneration"].Fields["Property8"], "property8", "Property8", "*SubObj5", false, t)
+	testField(t, g.Structs["TestFieldGeneration"].Fields["Property1"], "property1", "Property1", "string", false)
+	testField(t, g.Structs["TestFieldGeneration"].Fields["Property2"], "property2", "Property2", "*Address", true)
+	testField(t, g.Structs["TestFieldGeneration"].Fields["Property3"], "property3", "Property3", "*SubObj1", false)
+	testField(t, g.Structs["TestFieldGeneration"].Fields["Property4"], "property4", "Property4", "map[string]int", false)
+	testField(t, g.Structs["TestFieldGeneration"].Fields["Property5"], "property5", "Property5", "*SubObj3", false)
+	testField(t, g.Structs["TestFieldGeneration"].Fields["Property6"], "property6", "Property6", "map[string]*SubObj4a", false)
+	testField(t, g.Structs["TestFieldGeneration"].Fields["Property7"], "property7", "Property7", "*Property7", false)
+	testField(t, g.Structs["TestFieldGeneration"].Fields["Property8"], "property8", "Property8", "*SubObj5", false)
 
-	testField(g.Structs["SubObj1"].Fields["Name"], "name", "Name", "string", false, t)
-	testField(g.Structs["SubObj3"].Fields["SubObj3a"], "SubObj3a", "SubObj3a", "*SubObj3a", false, t)
-	testField(g.Structs["SubObj4a"].Fields["Subproperty1"], "subproperty1", "Subproperty1", "int", false, t)
+	testField(t, g.Structs["SubObj1"].Fields["Name"], "name", "Name", "string", false)
+	testField(t, g.Structs["SubObj3"].Fields["SubObj3a"], "SubObj3a", "SubObj3a", "*SubObj3a", false)
+	testField(t, g.Structs["SubObj4a"].Fields["Subproperty1"], "subproperty1", "Subproperty1", "int", false)
 
-	testField(g.Structs["SubObj5"].Fields["Name"], "name", "Name", "string", false, t)
-	testField(g.Structs["SubObj5"].Fields["AdditionalProperties"], "-", "AdditionalProperties", "map[string]int", false, t)
+	testField(t, g.Structs["SubObj5"].Fields["Name"], "name", "Name", "string", false)
+	testField(t, g.Structs["SubObj5"].Fields["AdditionalProperties"], "-", "AdditionalProperties", "map[string]int", false)
 
 	if strct, ok := g.Structs["Property7"]; !ok {
 		t.Fatal("Property7 wasn't generated")
-	} else {
-		if len(strct.Fields) != 0 {
-			t.Fatal("Property7 expected 0 fields")
-		}
+	} else if len(strct.Fields) != 0 {
+		t.Fatal("Property7 expected 0 fields")
 	}
 }
 
@@ -153,7 +151,7 @@ func TestFieldGenerationWithArrayReferences(t *testing.T) {
 	g := New(&root)
 	err := g.CreateTypes()
 
-	//Output(os.Stderr, g, "test")
+	// Output(os.Stderr, g, "test")
 
 	if err != nil {
 		t.Error("Failed to get the fields: ", err)
@@ -163,13 +161,14 @@ func TestFieldGenerationWithArrayReferences(t *testing.T) {
 		t.Errorf("Expected 3 results, but got %d results", len(g.Structs))
 	}
 
-	testField(g.Structs["TestFieldGenerationWithArrayReferences"].Fields["Property1"], "property1", "Property1", "string", false, t)
-	testField(g.Structs["TestFieldGenerationWithArrayReferences"].Fields["Property2"], "property2", "Property2", "[]*Address", true, t)
-	testField(g.Structs["TestFieldGenerationWithArrayReferences"].Fields["Property3"], "property3", "Property3", "[]map[string]int", false, t)
-	testField(g.Structs["TestFieldGenerationWithArrayReferences"].Fields["Property4"], "property4", "Property4", "[][]*Inner", false, t)
+	testField(t, g.Structs["TestFieldGenerationWithArrayReferences"].Fields["Property1"], "property1", "Property1", "string", false)
+	testField(t, g.Structs["TestFieldGenerationWithArrayReferences"].Fields["Property2"], "property2", "Property2", "[]*Address", true)
+	testField(t, g.Structs["TestFieldGenerationWithArrayReferences"].Fields["Property3"], "property3", "Property3", "[]map[string]int", false)
+	testField(t, g.Structs["TestFieldGenerationWithArrayReferences"].Fields["Property4"], "property4", "Property4", "[][]*Inner", false)
 }
 
-func testField(actual Field, expectedJSONName string, expectedName string, expectedType string, expectedToBeRequired bool, t *testing.T) {
+func testField(t *testing.T, actual Field, expectedJSONName string, expectedName string, expectedType string, expectedToBeRequired bool) {
+	t.Helper()
 	if actual.JSONName != expectedJSONName {
 		t.Errorf("JSONName - expected \"%s\", got \"%s\"", expectedJSONName, actual.JSONName)
 	}
@@ -202,7 +201,7 @@ func TestNestedStructGeneration(t *testing.T) {
 	err := g.CreateTypes()
 	results := g.Structs
 
-	//Output(os.Stderr, g, "test")
+	// Output(os.Stderr, g, "test")
 
 	if err != nil {
 		t.Error("Failed to create structs: ", err)
@@ -596,7 +595,7 @@ func TestThatTypesWithMultipleDefinitionsAreGeneratedAsEmptyInterfaces(t *testin
 	root := &Schema{}
 	root.Title = "Multiple possible types"
 	root.Properties = map[string]*Schema{
-		"name": {TypeValue: []interface{}{"string", "integer"}},
+		"name": {TypeValue: []any{"string", "integer"}},
 	}
 
 	root.Init()
@@ -648,7 +647,7 @@ func TestThatUnmarshallingIsPossible(t *testing.T) {
 			name:  "map",
 			input: `{ "name": { "key": "value" } }`,
 			expected: Root{
-				Name: map[string]interface{}{
+				Name: map[string]any{
 					"key": "value",
 				},
 			},
@@ -657,7 +656,7 @@ func TestThatUnmarshallingIsPossible(t *testing.T) {
 			name:  "array",
 			input: `{ "name": [ "a", "b" ] }`,
 			expected: Root{
-				Name: []interface{}{"a", "b"},
+				Name: []any{"a", "b"},
 			},
 		},
 		{
@@ -740,7 +739,7 @@ func TestTypeAliases(t *testing.T) {
 			gotype: "map[string]interface{}",
 			input: &Schema{
 				TypeValue:            "object",
-				AdditionalProperties: (*AdditionalProperties)(&Schema{TypeValue: []interface{}{"string", "integer"}}),
+				AdditionalProperties: (*AdditionalProperties)(&Schema{TypeValue: []any{"string", "integer"}}),
 			},
 			structs: 0,
 			aliases: 1,
@@ -777,5 +776,5 @@ func TestTypeAliases(t *testing.T) {
 
 // Root is an example of a generated type.
 type Root struct {
-	Name interface{} `json:"name,omitempty"`
+	Name any `json:"name,omitempty"`
 }

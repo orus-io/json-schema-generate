@@ -3,6 +3,7 @@ package generate
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -29,7 +30,7 @@ type Schema struct {
 
 	// TypeValue is the schema instance type.
 	// http://json-schema.org/draft-07/json-schema-validation.html#rfc.section.6.1.1
-	TypeValue interface{} `json:"type"`
+	TypeValue any `json:"type"`
 
 	Enum []json.RawMessage
 
@@ -57,11 +58,11 @@ type Schema struct {
 
 	// Default can be used to supply a default JSON value associated with a particular schema.
 	// http://json-schema.org/draft-07/json-schema-validation.html#rfc.section.10.2
-	Default interface{}
+	Default any
 
 	// Examples ...
 	// http://json-schema.org/draft-07/json-schema-validation.html#rfc.section.10.4
-	Examples []interface{}
+	Examples []any
 
 	// Reference is a URI reference to a schema.
 	// http://json-schema.org/draft-07/json-schema-core.html#rfc.section.8
@@ -115,8 +116,9 @@ func (ap *AdditionalProperties) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &s)
 	if err == nil {
 		*ap = AdditionalProperties(s)
+		return nil
 	}
-	return err
+	return fmt.Errorf("additionalProperties unmarshal: %w", err)
 }
 
 // ID returns the schema URI id.
@@ -145,7 +147,7 @@ func (schema *Schema) Type() (firstOrDefault string, multiple bool) {
 	}
 
 	// We could have multiple types in the type value, e.g. { "type": [ "object", "array" ] }
-	if a, ok := schema.TypeValue.([]interface{}); ok {
+	if a, ok := schema.TypeValue.([]any); ok {
 		multiple = len(a) > 1
 		for _, n := range a {
 			if s, ok := n.(string); ok {
@@ -166,7 +168,7 @@ func (schema *Schema) MultiType() ([]string, bool) {
 	}
 
 	// We could have multiple types in the type value, e.g. { "type": [ "object", "array" ] }
-	if a, ok := schema.TypeValue.([]interface{}); ok {
+	if a, ok := schema.TypeValue.([]any); ok {
 		rv := []string{}
 		for _, n := range a {
 			if s, ok := n.(string); ok {
@@ -198,7 +200,7 @@ func ParseWithSchemaKeyRequired(schema string, uri *url.URL, schemaKeyRequired b
 	err := json.Unmarshal([]byte(schema), s)
 
 	if err != nil {
-		return s, err
+		return s, fmt.Errorf("parse schema: %w", err)
 	}
 
 	if s.ID() == "" {

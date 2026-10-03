@@ -53,11 +53,11 @@ func (r *RefResolver) GetPath(schema *Schema) string {
 func (r *RefResolver) GetSchemaByReference(schema *Schema) (*Schema, error) {
 	u, err := url.Parse(schema.GetRoot().ID())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing schema root ID: %w", err)
 	}
 	ref, err := url.Parse(schema.Reference)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing schema reference: %w", err)
 	}
 	resolvedPath := u.ResolveReference(ref)
 	path, ok := r.pathToSchema[resolvedPath.String()]
@@ -78,7 +78,7 @@ func (r *RefResolver) mapPaths(schema *Schema) error {
 		var err error
 		rootURI, err = url.Parse(id)
 		if err != nil {
-			return err
+			return fmt.Errorf("parsing root schema id: %w", err)
 		}
 		// ensure no fragment.
 		rootURI.Fragment = ""
@@ -104,7 +104,7 @@ func (r *RefResolver) updateURIs(schema *Schema, baseURI url.URL, checkCurrentID
 		if id != "" {
 			newBase, err := url.Parse(id)
 			if err != nil {
-				return err
+				return fmt.Errorf("parsing schema id: %w", err)
 			}
 			// if it's a JSON fragment and we're coming from part of the tree where the baseURI has changed, we need to
 			// ignore the fragment, since it won't be resolvable under the current baseURI.
@@ -166,8 +166,11 @@ func (r *RefResolver) updateURIs(schema *Schema, baseURI url.URL, checkCurrentID
 
 // InsertURI to the references.
 func (r *RefResolver) InsertURI(uri string, schema *Schema) error {
-	if _, ok := r.pathToSchema[uri]; ok {
-		return fmt.Errorf("attempted to add duplicate uri: %s/%s", schema.GetRoot().ID(), uri)
+	if existing, ok := r.pathToSchema[uri]; ok {
+		if existing != schema {
+			return fmt.Errorf("attempted to add duplicate uri: %s/%s", schema.GetRoot().ID(), uri)
+		}
+		return nil
 	}
 	r.pathToSchema[uri] = schema
 	return nil

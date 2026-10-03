@@ -1,0 +1,62 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - errorlint
+    - misspell
+    - gocritic
+    - revive
+    - gosec
+    - gocyclo
+    - modernize
+    - copyloopvar
+    - errchkjson
+    - errname
+    - forcetypeassert
+    - nilnesserr
+    - nilnil
+    - testifylint
+    - unparam
+    - wastedassign
+    - predeclared
+    - reassign
+    - asciicheck
+    - dupword
+    - gocheckcompilerdirectives
+    - intrange
+    - perfsprint
+    - prealloc
+    - usestdlibvars
+    - usetesting
+    - unconvert
+    - nolintlint
+    - thelper
+    - makezero
+    - recvcheck
+    - goprintffuncname
+    - nakedret
+    - wrapcheck
+
+  settings:
+    gocyclo:
+      min-complexity: 25
+
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - test/.*_gen
+      - vendor
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

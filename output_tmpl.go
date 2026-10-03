@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"slices"
 	"strings"
 	"text/template"
 )
@@ -70,21 +71,11 @@ var funcs = template.FuncMap{
 	},
 	// isStreamMarshaller returns true if the given type is known to have a MarshalJSONStream function
 	"isStreamMarshaller": func(t string) bool {
-		for _, s := range streamMarshallerTypes {
-			if s == t {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(streamMarshallerTypes, t)
 	},
 	// isIteratorUnmarshaller returns true if the given type is known to have a UnmarshalJSONIterator function
 	"isIteratorUnmarshaller": func(t string) bool {
-		for _, s := range iteratorUnmashallerTypes {
-			if s == t {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(iteratorUnmashallerTypes, t)
 	},
 }
 
