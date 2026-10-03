@@ -15,6 +15,32 @@ linters:
     - gosec
     - gocyclo
     - modernize
+    - copyloopvar
+    - errchkjson
+    - errname
+    - forcetypeassert
+    - nilnesserr
+    - nilnil
+    - testifylint
+    - unparam
+    - wastedassign
+    - predeclared
+    - reassign
+    - asciicheck
+    - dupword
+    - gocheckcompilerdirectives
+    - intrange
+    - perfsprint
+    - prealloc
+    - usestdlibvars
+    - usetesting
+    - unconvert
+    - nolintlint
+    - thelper
+    - makezero
+    - recvcheck
+    - goprintffuncname
+    - nakedret
 
   settings:
     gocyclo:
