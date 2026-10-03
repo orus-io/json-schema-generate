@@ -3,6 +3,7 @@ package generate
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -115,8 +116,9 @@ func (ap *AdditionalProperties) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &s)
 	if err == nil {
 		*ap = AdditionalProperties(s)
+		return nil
 	}
-	return err
+	return fmt.Errorf("additionalProperties unmarshal: %w", err)
 }
 
 // ID returns the schema URI id.
@@ -198,7 +200,7 @@ func ParseWithSchemaKeyRequired(schema string, uri *url.URL, schemaKeyRequired b
 	err := json.Unmarshal([]byte(schema), s)
 
 	if err != nil {
-		return s, err
+		return s, fmt.Errorf("parse schema: %w", err)
 	}
 
 	if s.ID() == "" {
